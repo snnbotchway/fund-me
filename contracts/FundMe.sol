@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity 0.8.18;
 
-import "./PriceConverter.sol";
+import {AggregatorV3Interface, PriceConverter} from "./PriceConverter.sol";
 
 error InsufficientContribution();
 error OutdatedFeed();
@@ -11,12 +11,14 @@ error WithdrawalFailed();
 contract FundMe {
     using PriceConverter for uint256;
 
-    uint256 public immutable minimumContributionInUSD;
+    uint256 public immutable minimumContributionInUSDTimes1e18;
     address public immutable owner;
+    AggregatorV3Interface private immutable priceFeed;
 
-    constructor(uint256 _minimumContributionInUSD) {
+    constructor(uint256 _minimumContributionInUSD, address _priceFeed) {
         owner = msg.sender;
-        minimumContributionInUSD = _minimumContributionInUSD;
+        minimumContributionInUSDTimes1e18 = _minimumContributionInUSD * 1e18;
+        priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
     modifier onlyOwner() {
@@ -27,9 +29,11 @@ contract FundMe {
     }
 
     function fund() public payable {
-        (uint256 amountInUsd, uint256 updatedAt) = msg.value.getUsdData();
+        (uint256 amountInUsdTimes1e18, uint256 updatedAt) = msg
+            .value
+            .getUsdData(priceFeed);
 
-        if (amountInUsd < minimumContributionInUSD) {
+        if (amountInUsdTimes1e18 < minimumContributionInUSDTimes1e18) {
             revert InsufficientContribution();
         }
         if (block.timestamp - updatedAt > 1 hours) {
