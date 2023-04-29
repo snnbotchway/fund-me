@@ -8,18 +8,19 @@ error OutdatedFeed();
 error Unauthorized();
 error WithdrawalFailed();
 
+/// @author Solomon Botchway
+/// @title A crowdfunding contract
+/// @notice This is just a demo contract to demonstrate crowfunding
+/// @dev This makes use of chainlink's price feeds
 contract FundMe {
     using PriceConverter for uint256;
 
-    uint256 public immutable minimumContributionInUSDTimes1e18;
+    uint256 public immutable minimumContributionInUSDTimes10exp18;
     address public immutable owner;
     AggregatorV3Interface private immutable priceFeed;
 
-    constructor(uint256 _minimumContributionInUSD, address _priceFeed) {
-        owner = msg.sender;
-        minimumContributionInUSDTimes1e18 = _minimumContributionInUSD * 1e18;
-        priceFeed = AggregatorV3Interface(_priceFeed);
-    }
+    mapping(address => uint) contributions;
+    address[] public funders;
 
     modifier onlyOwner() {
         if (msg.sender != owner) {
@@ -28,26 +29,15 @@ contract FundMe {
         _;
     }
 
-    function fund() public payable {
-        (uint256 amountInUsdTimes1e18, uint256 updatedAt) = msg
-            .value
-            .getUsdData(priceFeed);
-
-        if (amountInUsdTimes1e18 < minimumContributionInUSDTimes1e18) {
-            revert InsufficientContribution();
-        }
-        if (block.timestamp - updatedAt > 1 hours) {
-            revert OutdatedFeed();
-        }
-    }
-
-    function withdraw() external onlyOwner {
-        (bool success, ) = payable(msg.sender).call{
-            value: address(this).balance
-        }("");
-        if (!success) {
-            revert WithdrawalFailed();
-        }
+    /// @param _priceFeed is the address of the price feed contract
+    /// @param _minimumContributionInUSD is minimum contribution ammount in USD
+    /// @dev The minimum USD contribution is multiplied by 10**18 before being stored
+    /// This is to make the fund function more gas efficient by avoiding a division of 10**18
+    /// every time the fund function is called
+    constructor(uint256 _minimumContributionInUSD, address _priceFeed) {
+        owner = msg.sender;
+        minimumContributionInUSDTimes10exp18 = _minimumContributionInUSD * (10 ** 18);
+        priceFeed = AggregatorV3Interface(_priceFeed);
     }
 
     receive() external payable {
@@ -56,5 +46,36 @@ contract FundMe {
 
     fallback() external payable {
         fund();
+    }
+
+    /// @notice Withdraw all the funds in the contract
+    /// @dev only the owner can call this function and the contributors are reset
+    function withdraw() external onlyOwner {
+        for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
+            address funder = funders[funderIndex];
+            contributions[funder] = 0;
+        }
+        funders = new address[](0);
+
+        (bool success, ) = payable(msg.sender).call{value: address(this).balance}("");
+        if (!success) {
+            revert WithdrawalFailed();
+        }
+    }
+
+    /// @notice Make a contribution to the contract
+    /// @dev USD price is retrieved from chainlink pricefeed
+    function fund() public payable {
+        (uint256 amountInUsdTimesTimes10exp18, uint256 updatedAt) = msg.value.getUsdData(priceFeed);
+
+        if (amountInUsdTimesTimes10exp18 < minimumContributionInUSDTimes10exp18) {
+            revert InsufficientContribution();
+        }
+        if (block.timestamp - updatedAt > 1 hours) {
+            revert OutdatedFeed();
+        }
+
+        contributions[msg.sender] += msg.value;
+        funders.push(msg.sender);
     }
 }
