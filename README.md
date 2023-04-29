@@ -14,9 +14,8 @@ FundMe is a Hardhat project that serves as a useful guide and template for other
     yarn solhint --init
     ```
 
-    Copy `.solhint.json` into the project.
-
-    import `@nomiclabs/hardhat-solhint` in hardhat config.
+    - Copy `.solhint.json` into the project.
+    - import `@nomiclabs/hardhat-solhint` in hardhat config.
 
     ```bash
     yarn solhint contracts/*.sol
@@ -30,11 +29,17 @@ FundMe is a Hardhat project that serves as a useful guide and template for other
     ```
 
 4. Setup hardhat-deploy
-   Import `hardhat-deploy` in hardhat config
-   Create a `deploy` folder for hardhat-deploy and write your deploy scripts
-   Remember to reference this project's `hardhat.config.ts`.
+
+    - Import `hardhat-deploy` in hardhat config
+    - Create a `deploy` folder for hardhat-deploy and write your deploy scripts
+    - Remember to reference this project's `hardhat.config.ts`.
 
     ```bash
-    yarn add hardhat-deploy
+    yarn add --dev hardhat-deploy
     yarn add --dev @nomiclabs/hardhat-ethers@npm:hardhat-deploy-ethers ethers
     ```
+
+5. Mocking chainlink's AggregatorV3Interface for development and testing:
+    - Add your mocks to the contracts folder
+    - Write a deployment script for the contract and the mocks.
+    - Use the helper hardhat config to specify different settings for each network.

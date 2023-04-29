@@ -31,6 +31,8 @@
     "typescript": ">=4.5.0"
   },
   "scripts": {
-    "solhint": "solhint contracts/*.sol"
+    "solhint": "solhint 'contracts/**/*.sol'",
+    "compile": "hardhat compile",
+    "deploy": "hardhat deploy"
   }
 }

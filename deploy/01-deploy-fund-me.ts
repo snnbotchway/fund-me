@@ -1,11 +1,44 @@
 import { network } from "hardhat"
 import { HardhatRuntimeEnvironment } from "hardhat/types"
+import { DeployFunction } from "hardhat-deploy/types"
 
-export default async ({
+import {
+    developmentNetworks,
+    minimumUsdContribution,
+    networkConfig,
+} from "../helper-hardhat-config"
+import verify from "../utils/verifyContract"
+
+const deployFundMe: DeployFunction = async ({
     getNamedAccounts,
     deployments,
 }: HardhatRuntimeEnvironment) => {
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
-    const networkName = network.name
+
+    let ethUsdPriceFeedAddress: string
+    const isDevMode = developmentNetworks.includes(network.name)
+
+    if (isDevMode) {
+        const ethUsdAggregator = await deployments.get("MockV3Aggregator")
+        ethUsdPriceFeedAddress = ethUsdAggregator.address
+    } else {
+        const chainId = network.config.chainId!
+        ethUsdPriceFeedAddress = networkConfig[chainId].ethUsdPriceFeed
+    }
+
+    const args = [minimumUsdContribution, ethUsdPriceFeedAddress]
+    const fundMe = await deploy("FundMe", {
+        from: deployer,
+        args,
+        log: true,
+    })
+
+    if (!isDevMode && process.env.ETHERSCAN_API_KEY) {
+        await verify(fundMe.address, args)
+    }
+    log("=====================================================================")
 }
+
+deployFundMe.tags = ["fundMe"]
+export default deployFundMe

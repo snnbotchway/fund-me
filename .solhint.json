@@ -10,6 +10,7 @@
       {
         "ignoreConstructors": true
       }
-    ]
+    ],
+    "not-rely-on-time": "off"
   }
 }
