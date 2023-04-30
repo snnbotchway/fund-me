@@ -47,3 +47,9 @@ FundMe is a Hardhat project that serves as a useful guide and template for other
 
 6. Remember to format your contracts with the solidity style guide and NatSpec.
    Find the NatSpec tags docs at <https://docs.soliditylang.org/en/v0.8.19/natspec-format.html#tags>
+
+7. Write your tests(staging and unit)
+
+8. Optimize gas cost
+
+9. Deploy!

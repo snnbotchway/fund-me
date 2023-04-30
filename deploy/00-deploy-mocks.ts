@@ -9,7 +9,7 @@ const deployMock: DeployFunction = async function ({
     deployments,
 }: HardhatRuntimeEnvironment) {
     const isDevMode = developmentNetworks.includes(network.name)
-    if (isDevMode) return
+    if (!isDevMode) return
 
     const { deploy, log } = deployments
     const { deployer } = await getNamedAccounts()
@@ -17,7 +17,6 @@ const deployMock: DeployFunction = async function ({
     log("=====================================================================")
     log(`Development network(${network.name}) detected! Deploying mocks...`)
     await deploy("MockV3Aggregator", {
-        contract: "MockV3Aggregator",
         from: deployer,
         log: true,
         args: [mockArgs.decimals, mockArgs.initialAnswer],

@@ -23,8 +23,7 @@ const deployFundMe: DeployFunction = async ({
         const ethUsdAggregator = await deployments.get("MockV3Aggregator")
         ethUsdPriceFeedAddress = ethUsdAggregator.address
     } else {
-        const chainId = network.config.chainId!
-        ethUsdPriceFeedAddress = networkConfig[chainId].ethUsdPriceFeed
+        ethUsdPriceFeedAddress = networkConfig[network.name].ethUsdPriceFeed
     }
 
     const args = [minimumUsdContribution, ethUsdPriceFeedAddress]
@@ -32,6 +31,9 @@ const deployFundMe: DeployFunction = async ({
         from: deployer,
         args,
         log: true,
+        waitConfirmations: !isDevMode
+            ? networkConfig[network.name].blockConfirmations
+            : 1,
     })
 
     if (!isDevMode && process.env.ETHERSCAN_API_KEY) {

@@ -3,6 +3,7 @@
     "useTabs": false,
     "semi": false,
     "singleQuote": false,
+    "printWidth": 88,
     "overrides": [
         {
             "files": "*.sol",

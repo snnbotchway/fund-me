@@ -17,9 +17,9 @@ contract FundMe {
 
     uint256 public immutable minimumContributionInUSDTimes10exp18;
     address public immutable owner;
-    AggregatorV3Interface private immutable priceFeed;
+    AggregatorV3Interface public immutable priceFeed;
 
-    mapping(address => uint) contributions;
+    mapping(address => uint) public contributions;
     address[] public funders;
 
     modifier onlyOwner() {
@@ -51,9 +51,11 @@ contract FundMe {
     /// @notice Withdraw all the funds in the contract
     /// @dev only the owner can call this function and the contributors are reset
     function withdraw() external onlyOwner {
-        for (uint256 funderIndex = 0; funderIndex < funders.length; funderIndex++) {
-            address funder = funders[funderIndex];
-            contributions[funder] = 0;
+        address[] memory _funders = funders;
+        uint256 fundersLength = _funders.length;
+
+        for (uint256 funderIndex = 0; funderIndex < fundersLength; funderIndex++) {
+            contributions[_funders[funderIndex]] = 0;
         }
         funders = new address[](0);
 

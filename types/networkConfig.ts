@@ -1,6 +1,6 @@
 export default interface NetworkConfig {
-    [chainId: number]: {
-        name: string
+    [networkName: string]: {
         ethUsdPriceFeed: string
+        blockConfirmations: number
     }
 }
